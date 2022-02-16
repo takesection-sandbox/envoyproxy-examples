@@ -42,9 +42,9 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: <BUCKET_NAME>.s3.<REGION>.amazonaws.com
+                address: <BUCKET_NAME>.s3.amazonaws.com
                 port_value: 443
-            hostname: <BUCKET_NAME>.s3.<REGION>.amazonaws.com
+            hostname: <BUCKET_NAME>.s3.amazonaws.com
     transport_socket:
       name: envoy.transport_sockets.tls
 
