@@ -37,7 +37,8 @@ static_resources:
                   issuer: "https://cognito-idp.<REGION>.amazonaws.com/<POOL ID>"
                   audiences:
                   - "<CLIENT ID>"
-                  forward: true
+                  #forward: true
+                  forward_payload_header: jwt-payload
                   remote_jwks:
                     http_uri:
                       uri: "https://cognito-idp.<REGION>.amazonaws.com/<POOL ID>/.well-known/jwks.json"
