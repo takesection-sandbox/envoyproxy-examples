@@ -1,0 +1,13 @@
+{
+  "name": "envoyproxy-examples",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "help": "mmdc -h"
+  },
+  "author": "Shigeki Shoji",
+  "license": "MIT",
+  "dependencies": {
+    "mermaid.cli": "^0.5.1"
+  }
+}
