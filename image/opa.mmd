@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant Browser
+  participant Envoy Proxy
+  participant OPA
+  participant S3
+  participant Cognito
+
+  Browser->>Envoy Proxy: GET /
+  Envoy Proxy->>Cognito: Get and cache jwks.json
+  Envoy Proxy->>Envoy Proxy: Validate iss, aud
+  Envoy Proxy->>Envoy Proxy: Validate signature
+  alt OK
+    Envoy Proxy->>OPA: Authorization (gRPC)
+    alt OK
+      Envoy Proxy->>S3: GET /index.hml
+      Envoy Proxy->>Browser: 200 OK
+    else Forbidden
+      Envoy Proxy->>Browser: 403 Forbidden
+    end
+  else Unauthorized
+    Envoy Proxy->>Browser: 401 Unauthorized
+  end
