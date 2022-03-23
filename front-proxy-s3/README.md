@@ -18,3 +18,5 @@ nerdctl build -t front-proxy-s3 .
 ```shell
 nerdctl run -d --name front-proxy -e BUCKET_NAME=<BUCKET_NAME> -p 8080:8080 -p 9901:9901 front-proxy-s3
 ```
+
+環境変数に `AWS_REGION` を設定すると、S3 へのエンドポイントにリージョンが含まれるようになります。

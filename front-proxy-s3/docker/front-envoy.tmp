@@ -48,8 +48,8 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: $BUCKET_NAME.s3.amazonaws.com
+                address: $BUCKET_URL
                 port_value: 443
-            hostname: $BUCKET_NAME.s3.amazonaws.com
+            hostname: $BUCKET_URL
     transport_socket:
       name: envoy.transport_sockets.tls
