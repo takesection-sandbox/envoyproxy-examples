@@ -1,5 +1,7 @@
 FROM envoyproxy/envoy:v1.21-latest
-COPY front-envoy.yaml /etc
+COPY docker/front-envoy.tmp /etc/envoy
+COPY docker/agent.sh /
 EXPOSE 8080
 EXPOSE 9901
-CMD ["envoy", "-c", "/etc/front-envoy.yaml", "--service-cluster", "front-proxy"]
+ENTRYPOINT ["/agent.sh"]
+CMD ["envoy", "-c", "/etc/envoy/front-envoy.yaml", "--service-cluster", "front-proxy"]
