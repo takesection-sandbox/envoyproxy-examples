@@ -28,13 +28,22 @@ static_resources:
                   prefix: /
                 route:
                   cluster: s3
-                  auto_host_rewrite: true
-                  regex_rewrite:
-                    pattern:
-                      google_re2: {}
-                      regex: '^(.*)\/$'
-                    substitution: '\1/index.html'
           http_filters:
+          - name: envoy.filters.http.lua
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+              inline_code: |
+                function envoy_on_request(request_handle)
+                  path = request_handle:headers():get(\":path\"):gsub(\"/$\", \"/index.html\")
+                  request_handle:headers():replace(\":path\", path)
+                end
+          - name: envoy.filters.http.aws_request_signing
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.aws_request_signing.v3.AwsRequestSigning
+              service_name: s3
+              region: ap-northeast-3
+              use_unsigned_payload: true
+              host_rewrite: ${BUCKET_URL}
           - name: envoy.filters.http.router
   
   clusters:
@@ -50,6 +59,5 @@ static_resources:
               socket_address:
                 address: $BUCKET_URL
                 port_value: 443
-            hostname: $BUCKET_URL
     transport_socket:
       name: envoy.transport_sockets.tls
