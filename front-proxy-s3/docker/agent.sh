@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+printenv
+
 if [ -n "$BUCKET_NAME" ]; then
   if [ -n "$AWS_REGION" ]; then
     export BUCKET_URL="$BUCKET_NAME.s3.$AWS_REGION.amazonaws.com"
