@@ -20,3 +20,7 @@ nerdctl run -d --name front-proxy -e BUCKET_NAME=<BUCKET_NAME> -p 8080:8080 -p 9
 ```
 
 You can set the Region using the AWS_REGION environment variable.
+
+## How to use container image on AWS Fargate
+
+You can use the [AWS Cloudformation](aws-cloudformation/README.md).

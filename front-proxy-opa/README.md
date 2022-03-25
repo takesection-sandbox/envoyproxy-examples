@@ -1,3 +1,6 @@
+
+![](../image/opa.png)
+
 ```
 nerdctl compose up
 ```
@@ -24,7 +27,7 @@ curl -v -H 'Authorization: Bearer <ID TOKEN>' http://localhost:8080/index.html
 
 ```
 
-# Resources
+## Resources
 
 * [Envoy Docs](https://www.envoyproxy.io/docs.html)
     * [JWT Authentication](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/jwt_authn_filter)
