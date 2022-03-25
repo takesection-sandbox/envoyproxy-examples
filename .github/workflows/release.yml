@@ -35,6 +35,13 @@ jobs:
           images: |
             pigumergroup/front-proxy-jwt
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta-opa
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: |
+            pigumergroup/front-proxy-opa
+
       - name: Build and push Docker images
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
@@ -50,3 +57,11 @@ jobs:
           push: true
           tags: ${{ steps.meta-jwt.outputs.tags }}
           labels: ${{ steps.meta-jwt.outputs.labels }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: front-proxy-opa
+          push: true
+          tags: ${{ steps.meta-opa.outputs.tags }}
+          labels: ${{ steps.meta-opa.outputs.labels }}
