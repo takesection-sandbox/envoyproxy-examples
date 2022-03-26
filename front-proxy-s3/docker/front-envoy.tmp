@@ -41,7 +41,7 @@ static_resources:
             typed_config:
               '@type': type.googleapis.com/envoy.extensions.filters.http.aws_request_signing.v3.AwsRequestSigning
               service_name: s3
-              region: ap-northeast-3
+              region: $AWS_REGION
               use_unsigned_payload: true
               host_rewrite: ${BUCKET_URL}
           - name: envoy.filters.http.router
