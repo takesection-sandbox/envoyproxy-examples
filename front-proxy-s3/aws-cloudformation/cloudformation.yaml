@@ -60,6 +60,23 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref RouteTable
 
+  S3GatewayEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:GetObject'
+            Resource:
+              - !Sub 'arn:aws:s3:::${BucketName}/*'
+      RouteTableIds:
+        - !Ref RouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
+
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -134,8 +151,23 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
       Policies:
-        - PolicyName: ecsTaskExecutionRolePolicy
+        - PolicyName: ecsTaskRolePolicy
           PolicyDocument:
             Statement:
               - Effect: Allow
@@ -143,8 +175,6 @@ Resources:
                   - "s3:Get*"
                   - "s3:List*"
                 Resource: '*'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
   Log:
     Type: AWS::Logs::LogGroup
@@ -159,7 +189,7 @@ Resources:
           Environment:
             - Name: 'BUCKET_NAME'
               Value: !Ref BucketName
-          Image: 'pigumergroup/front-proxy-s3:latest'
+          Image: 'pigumergroup/front-proxy-s3:v0.2.0'
           LogConfiguration:
             LogDriver: 'awslogs'
             Options:
@@ -179,6 +209,10 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
+      TaskRoleArn:
+        Fn::GetAtt:
+          - ECSTaskRole
+          - Arn
 
   Service:
     DependsOn: LoadBalancerListener
