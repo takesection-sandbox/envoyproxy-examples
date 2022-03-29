@@ -1,3 +1,9 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
 static_resources:
   listeners:
   - address:
@@ -8,7 +14,7 @@ static_resources:
     - filters:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
-          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           codec_type: AUTO 
           stat_prefix: ingress_http
           route_config:
@@ -16,31 +22,25 @@ static_resources:
             virtual_hosts:
             - name: static_web
               domains:
-              - "*"
+              - '*'
               routes:
               - match:
                   prefix: /
                 route:
                   cluster: s3
-                  auto_host_rewrite: true
-                  regex_rewrite:
-                    pattern:
-                      google_re2: {}
-                      regex: '^(.*)\/$'
-                    substitution: '\1/index.html'
           http_filters:
           - name: envoy.filters.http.jwt_authn
             typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+              '@type': type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
               providers:
                 amazoncognito:
-                  issuer: "https://cognito-idp.<REGION>.amazonaws.com/<POOL ID>"
+                  issuer: "https://cognito-idp.<COGNITO_REGION>.amazonaws.com/<POOL ID>"
                   audiences:
                   - "<CLIENT ID>"
                   forward_payload_header: jwt-payload
                   remote_jwks:
                     http_uri:
-                      uri: "https://cognito-idp.<REGION>.amazonaws.com/<POOL ID>/.well-known/jwks.json"
+                      uri: "https://cognito-idp.<COGNITO_REGION>.amazonaws.com/<POOL ID>/.well-known/jwks.json"
                       cluster: jwks
                       timeout: 5s
                     cache_duration: 600s
@@ -49,6 +49,21 @@ static_resources:
                   prefix: /
                 requires:
                   provider_name: amazoncognito
+          - name: envoy.filters.http.lua
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+              inline_code: |
+                function envoy_on_request(request_handle)
+                  path = request_handle:headers():get(":path"):gsub("/$", "/index.html")
+                  request_handle:headers():replace(":path", path)
+                end
+          - name: envoy.filters.http.aws_request_signing
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.filters.http.aws_request_signing.v3.AwsRequestSigning
+              service_name: s3
+              region: <AWS_REGION>
+              use_unsigned_payload: true
+              host_rewrite: <BUCKET_NAME>.s3.<AWS_REGION>.amazonaws.com
           - name: envoy.filters.http.router
   
   clusters:
@@ -62,9 +77,8 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: <BUCKET_NAME>.s3.amazonaws.com
+                address: <BUCKET_NAME>.s3.<AWS_REGION>.amazonaws.com
                 port_value: 443
-            hostname: <BUCKET_NAME>.s3.amazonaws.com
     transport_socket:
       name: envoy.transport_sockets.tls
   - name: jwks
@@ -77,13 +91,7 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: cognito-idp.<REGION>.amazonaws.com 
+                address: cognito-idp.<COGNITO_REGION>.amazonaws.com
                 port_value: 443
     transport_socket:
       name: envoy.transport_sockets.tls
-
-admin:
-  address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: 9901
