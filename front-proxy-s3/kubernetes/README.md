@@ -186,7 +186,7 @@ kubectl run ubuntu -i -t --rm=true --image=ubuntu
 次に、`curl` をインストールして、上記で取得した CLUSTER-IP を使ってアクセスしてみましょう。`<>` で囲んだ `CLUSTER-IP` の部分を上記で取得した IP アドレスに置き換えてください。
 
 ```shell
-apt update; apt install curl -y; curl -v http://<CLUSTER-IP>/
+apt update; apt install curl -y; curl -v http://<CLUSTER-IP>:8080/
 ```
 
 ## Ingress
