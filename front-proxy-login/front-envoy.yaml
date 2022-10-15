@@ -13,7 +13,7 @@ static_resources:
     - name: hmac
       generic_secret:
         secret:
-          inline_string: <Your token secret here>
+          inline_string: <Your hmac secret here>
   listeners:
   - address:
       socket_address:
@@ -31,11 +31,11 @@ static_resources:
                 config:
                   token_endpoint:
                     cluster: oauth
-                    uri: <Your amazon cognito userpools domain>/oauth2/token
+                    uri: <Your amazon cognito userpools domain here>/oauth2/token
                     timeout: 10s
-                  authorization_endpoint: <Your amazon cognito userpools domain>/login
+                  authorization_endpoint: <Your amazon cognito userpools domain here>/login
                   credentials:
-                    client_id: <Your client id>
+                    client_id: <Your client id here>
                     token_secret:
                       name: token
                     hmac_secret:
@@ -64,9 +64,9 @@ static_resources:
               typed_config:
                 '@type': type.googleapis.com/envoy.extensions.filters.http.aws_request_signing.v3.AwsRequestSigning
                 service_name: s3
-                region: <Your s3 bucket region>
+                region: <Your s3 bucket region here>
                 use_unsigned_payload: true
-                host_rewrite: <Your s3 bucket name>.s3.<Your s3 bucket region>.amazonaws.com
+                host_rewrite: <Your s3 bucket name here>.s3.<Your s3 bucket region here>.amazonaws.com
             - name: envoy.filters.http.router
               typed_config:
                 "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -94,13 +94,13 @@ static_resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: <Your amazon cognito userpools domain>
+                    address: <Your amazon cognito userpools domain here>
                     port_value: 443
     transport_socket:
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        sni: <Your amazon cognito userpools domain>
+        sni: <Your amazon cognito userpools domain here>
   - name: s3
     type: LOGICAL_DNS
     dns_lookup_family: V4_ONLY
@@ -111,10 +111,10 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: <Your s3 bucket name>.s3.<Your s3 bucket region>.amazonaws.com
+                address: <Your s3 bucket name here>.s3.<Your s3 bucket region here>.amazonaws.com
                 port_value: 443
     transport_socket:
       name: envoy.transport_sockets.tls
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-        sni: <Your s3 bucket name>.s3.<Your s3 bucket region>.amazonaws.com
+        sni: <Your s3 bucket name here>.s3.<Your s3 bucket region here>.amazonaws.com
