@@ -47,7 +47,7 @@ static_resources:
                   signout_path:
                     path:
                       exact: /signout
-                  #forward_bearer_token: true
+                  forward_bearer_token: true
                   auth_scopes:
                     - openid
                     - email
