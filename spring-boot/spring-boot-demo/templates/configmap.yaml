@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+data:
+  front-envoy.yaml: |
+    node:
+      cluster: {{ .Values.envoyimage.node.cluster }}
+      id: {{ .Values.envoyimage.node.id }}
+    dynamic_resources:
+      cds_config:
+        path_config_source:
+          path: /var/lib/envoy/cds/cds.yaml
+      lds_config:
+        path_config_source:
+          path: /var/lib/envoy/lds/lds.yaml
+    admin:
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-cds
+data:
+  cds.yaml: |
+    resources:
+      - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+        name: en
+        load_assignment:
+          cluster_name: en
+          endpoints:
+            - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: 127.0.0.1
+                        port_value: 8081
+      - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+        name: ja
+        load_assignment:
+          cluster_name: ja
+          endpoints:
+            - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: 127.0.0.1
+                        port_value: 8082
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-lds
+data:
+  lds.yaml: |
+    resources:
+      - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+        name: listener_0
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: 8080
+        filter_chains:
+          - filters:
+              - name: envoy.filters.network.http_connection_manager
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                  stat_prefix: ingress_http
+                  route_config:
+                    name: local_route
+                    virtual_hosts:
+                      - name: local_service
+                        domains:
+                          - '*'
+                        routes:
+                          - match:
+                              prefix: "/ja"
+                            route:
+                              prefix_rewrite: "/"
+                              cluster: ja
+                          - match:
+                              prefix: "/"
+                            route:
+                              cluster: en
+                  http_filters:
+                    - name: envoy.router
+                      typed_config:
+                        "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
