@@ -100,12 +100,9 @@ spec:
             - readOnly: true
               mountPath: /config
               name: {{ .Chart.Name }}-config
-            - readOnly: true
-              mountPath: /var/lib/envoy/cds
-              name: {{ .Chart.Name }}-cds
-            - readOnly: true
-              mountPath: /var/lib/envoy/lds
-              name: {{ .Chart.Name }}-lds
+            - readOnly: false
+              mountPath: /var/lib/envoy
+              name: {{ .Chart.Name }}-host
           args:
             - "-c"
             - "/config/front-envoy.yaml"
@@ -113,12 +110,9 @@ spec:
         - name: {{ .Chart.Name }}-config
           configMap:
             name: {{ .Chart.Name }}-config
-        - name: {{ .Chart.Name }}-cds
-          configMap:
-            name: {{ .Chart.Name }}-cds
-        - name: {{ .Chart.Name }}-lds
-          configMap:
-            name: {{ .Chart.Name }}-lds
+        - name: {{ .Chart.Name }}-host
+          hostPath:
+            path: {{ .Values.envoyimage.configPath }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

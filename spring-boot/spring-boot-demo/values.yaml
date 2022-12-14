@@ -18,6 +18,8 @@ envoyimage:
   node:
     cluster: demo-cluster
     id: demo-id
+  # spring-boot/config ディレクトリの絶対パス
+  configPath: /tmp/rancher-desktop/config
 
 imagePullSecrets: []
 nameOverride: ""

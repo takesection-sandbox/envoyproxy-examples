@@ -22,7 +22,7 @@ resources:
                           prefix: "/ja"
                         route:
                           prefix_rewrite: "/"
-                          cluster: ja
+                          cluster: en
                       - match:
                           prefix: "/"
                         route:
