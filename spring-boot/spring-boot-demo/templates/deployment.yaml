@@ -33,16 +33,16 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8081
-            initialDelaySeconds: 30
-            periodSeconds: 60
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8081
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: 8081
+#            initialDelaySeconds: 30
+#            periodSeconds: 60
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: 8081
           env:
             - name: SERVER_PORT
               value: "8081"
@@ -55,16 +55,16 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8082
-            initialDelaySeconds: 30
-            periodSeconds: 60
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8082
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: 8082
+#            initialDelaySeconds: 30
+#            periodSeconds: 60
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: 8082
           env:
             - name: SERVER_PORT
               value: "8082"
@@ -77,16 +77,16 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ .Values.envoyimage.repository }}:{{ .Values.envoyimage.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 60
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#            initialDelaySeconds: 30
+#            periodSeconds: 60
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
           ports:
             - name: http
               containerPort: 8080
