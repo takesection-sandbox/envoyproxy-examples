@@ -18,7 +18,6 @@ envoyimage:
   node:
     cluster: demo-cluster
     id: demo-id
-  path: /Users/takesection/work/envoyproxy-examples/spring-boot/config
 
 imagePullSecrets: []
 nameOverride: ""
