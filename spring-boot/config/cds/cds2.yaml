@@ -1,0 +1,23 @@
+resources:
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: us
+    load_assignment:
+      cluster_name: us
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 127.0.0.1
+                    port_value: 8081
+  - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+    name: jp
+    load_assignment:
+      cluster_name: jp
+      endpoints:
+        - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: jp-spring-boot-demo.default.svc.cluster.local
+                    port_value: 80
