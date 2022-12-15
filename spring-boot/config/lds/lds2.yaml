@@ -19,14 +19,14 @@ resources:
                       - '*'
                     routes:
                       - match:
-                          prefix: "/ja"
+                          prefix: "/jp"
                         route:
                           prefix_rewrite: "/"
-                          cluster: ja
+                          cluster: jp
                       - match:
                           prefix: "/"
                         route:
-                          cluster: en
+                          cluster: us
               http_filters:
                 - name: envoy.router
                   typed_config:
