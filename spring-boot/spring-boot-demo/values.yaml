@@ -7,6 +7,7 @@ replicaCount: 1
 image:
   repository: demo
   pullPolicy: IfNotPresent
+  message: "Hello World"
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -19,7 +20,7 @@ envoyimage:
     cluster: demo-cluster
     id: demo-id
   # spring-boot/config ディレクトリの絶対パス
-  configPath: /tmp/rancher-desktop/config
+  basePath: /tmp/rancher-desktop
 
 imagePullSecrets: []
 nameOverride: ""

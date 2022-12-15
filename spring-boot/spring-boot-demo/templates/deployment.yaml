@@ -47,29 +47,7 @@ spec:
             - name: SERVER_PORT
               value: "8081"
             - name: DEMO_MESSAGE
-              value: "Hello World"
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-        - name: {{ .Chart.Name }}-ja
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-#          livenessProbe:
-#            httpGet:
-#              path: /
-#              port: 8082
-#            initialDelaySeconds: 30
-#            periodSeconds: 60
-#          readinessProbe:
-#            httpGet:
-#              path: /
-#              port: 8082
-          env:
-            - name: SERVER_PORT
-              value: "8082"
-            - name: DEMO_MESSAGE
-              value: "Hello Japan"
+              value: {{ .Values.image.message }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ .Values.envoyimage.name }}
@@ -99,7 +77,7 @@ spec:
           volumeMounts:
             - readOnly: true
               mountPath: /config
-              name: {{ .Chart.Name }}-config
+              name: config
             - readOnly: false
               mountPath: /var/lib/envoy
               name: {{ .Chart.Name }}-host
@@ -107,12 +85,12 @@ spec:
             - "-c"
             - "/config/front-envoy.yaml"
       volumes:
-        - name: {{ .Chart.Name }}-config
+        - name: config
           configMap:
-            name: {{ .Chart.Name }}-config
+            name: {{ include "spring-boot-demo.fullname" . }}-config
         - name: {{ .Chart.Name }}-host
           hostPath:
-            path: {{ .Values.envoyimage.configPath }}
+            path: {{ .Values.envoyimage.basePath }}/{{ .Release.Name }}/config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
