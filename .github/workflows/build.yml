@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+#      - name: configure aws credentials
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+#          aws-region: "ap-northeast-1"
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11.0.12'
+          distribution: 'temurin'
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -64,3 +74,6 @@ jobs:
           push: true
           tags: ${{ steps.meta-opa.outputs.tags }}
           labels: ${{ steps.meta-opa.outputs.labels }}
+
+      - run: (cd spring-boot; mvn spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}/demo)
+      - run: docker push "ghcr.io/${{ github.repository }}/demo:0.0.1-SNAPSHOT"
