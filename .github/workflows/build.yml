@@ -75,5 +75,5 @@ jobs:
           tags: ${{ steps.meta-opa.outputs.tags }}
           labels: ${{ steps.meta-opa.outputs.labels }}
 
-      - run: (cd spring-boot; mvn spring-boot:build-image -Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}/demo)
+      - run: (cd spring-boot; mvn spring-boot:build-image "-Dspring-boot.build-image.imageName=ghcr.io/${{ github.repository }}/demo:0.0.1-SNAPSHOT")
       - run: docker push "ghcr.io/${{ github.repository }}/demo:0.0.1-SNAPSHOT"
