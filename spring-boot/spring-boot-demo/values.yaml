@@ -5,11 +5,11 @@
 replicaCount: 1
 
 image:
-  repository: demo
+  repository: ghcr.io/takesection-sandbox/envoyproxy-examples/demo
   pullPolicy: IfNotPresent
   message: "Hello World"
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "0.0.1-snapshot"
 
 envoyimage:
   name: envoy
