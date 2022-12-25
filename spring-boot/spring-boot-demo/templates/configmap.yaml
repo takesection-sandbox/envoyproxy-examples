@@ -10,10 +10,18 @@ data:
     dynamic_resources:
       cds_config:
         path_config_source:
+          {{ if .Values.envoyimage.persistentVolumeClaim }}
+          path: /var/lib/envoy/{{ .Release.Name }}/config/cds/cds.yaml
+          {{ else }}
           path: /var/lib/envoy/cds/cds.yaml
+          {{ end }}
       lds_config:
         path_config_source:
+          {{ if .Values.envoyimage.persistentVolumeClaim }}
+          path: /var/lib/envoy/{{ .Release.Name }}/config/lds/lds.yaml
+          {{ else }}
           path: /var/lib/envoy/lds/lds.yaml
+          {{ end }}
     admin:
       address:
         socket_address:

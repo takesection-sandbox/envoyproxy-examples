@@ -80,7 +80,7 @@ spec:
               name: config
             - readOnly: false
               mountPath: /var/lib/envoy
-              name: {{ .Chart.Name }}-host
+              name: envoyproxy-config
           args:
             - "-c"
             - "/config/front-envoy.yaml"
@@ -88,9 +88,15 @@ spec:
         - name: config
           configMap:
             name: {{ include "spring-boot-demo.fullname" . }}-config
-        - name: {{ .Chart.Name }}-host
+        {{ if .Values.envoyimage.persistentVolumeClaim }}
+        - name: envoyproxy-config
+          persistentVolumeClaim:
+            claimName: envoyproxy-examples-volume-pvc
+        {{ else }}
+        - name: envoyproxy-config
           hostPath:
             path: {{ .Values.envoyimage.basePath }}/{{ .Release.Name }}/config
+        {{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
