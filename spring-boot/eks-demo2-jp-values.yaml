@@ -1,0 +1,5 @@
+service:
+  type: LoadBalancer
+
+image:
+  message: "Hello Japan"
