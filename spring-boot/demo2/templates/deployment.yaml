@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "demo2.fullname" . }}
+  labels:
+    {{- include "demo2.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "demo2.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "demo2.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "demo2.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init
+          image: busybox
+          command: ["sh", "-c", "(cp /config/cds/cds.yaml /config/dynamic/cds.yaml; cp /config/lds/lds.yaml /config/dynamic/lds.yaml)"]
+          volumeMounts:
+            - mountPath: /config/dynamic
+              name: dynamic-config
+            - mountPath: /config/cds
+              name: cds
+            - mountPath: /config/lds
+              name: lds
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          #          livenessProbe:
+          #            httpGet:
+          #              path: /
+          #              port: 8081
+          #            initialDelaySeconds: 30
+          #            periodSeconds: 60
+          #          readinessProbe:
+          #            httpGet:
+          #              path: /
+          #              port: 8081
+          env:
+            - name: SERVER_PORT
+              value: "8081"
+            - name: DEMO_MESSAGE
+              value: {{ .Values.image.message }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ .Values.envoyimage.name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.envoyimage.repository }}:{{ .Values.envoyimage.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          #          livenessProbe:
+          #            httpGet:
+          #              path: /
+          #              port: http
+          #            initialDelaySeconds: 30
+          #            periodSeconds: 60
+          #          readinessProbe:
+          #            httpGet:
+          #              path: /
+          #              port: http
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: admin
+              containerPort: 9901
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - readOnly: true
+              mountPath: /config
+              name: config
+            - mountPath: /config/dynamic
+              name: dynamic-config
+          args:
+            - "-c"
+            - "/config/front-envoy.yaml"
+      volumes:
+        - name: dynamic-config
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: {{ include "demo2.fullname" . }}-config
+        - name: cds
+          configMap:
+            name: {{ include "demo2.fullname" . }}-cds
+        - name: lds
+          configMap:
+            name: {{ include "demo2.fullname" . }}-lds
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
