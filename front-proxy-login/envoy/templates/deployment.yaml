@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "envoy.fullname" . }}
+  labels:
+    {{- include "envoy.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "envoy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "envoy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "envoy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init
+          image: busybox
+          command: ["sh", "-c", "(cp /config/cds/cds.yaml /config/dynamic/cds.yaml; cp /config/lds/lds.yaml /config/dynamic/lds.yaml)"]
+          volumeMounts:
+            - mountPath: /config/dynamic
+              name: dynamic-config
+            - mountPath: /config/cds
+              name: cds
+            - mountPath: /config/lds
+              name: lds
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.image.portValue }}
+              protocol: TCP
+            - name: admin
+              containerPort: 9901
+              protocol: TCP
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - readOnly: true
+              mountPath: /config
+              name: config
+            - readOnly: true
+              mountPath: /config/secret
+              name: secret
+            - mountPath: /config/dynamic
+              name: dynamic-config
+          args:
+            - "-c"
+            - "/config/front-envoy.yaml"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "envoy.fullname" . }}-aws-credential
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "envoy.fullname" . }}-aws-credential
+                  key: aws_secret_access_key
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "envoy.fullname" . }}-config
+        - name: secret
+          secret:
+            secretName: {{ include "envoy.fullname" . }}-secret
+        - name: dynamic-config
+          emptyDir: {}
+        - name: cds
+          configMap:
+            name: {{ include "envoy.fullname" . }}-cds
+        - name: lds
+          configMap:
+            name: {{ include "envoy.fullname" . }}-lds
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
