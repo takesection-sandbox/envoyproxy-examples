@@ -1,0 +1,155 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "envoy.fullname" . }}-config
+data:
+  front-envoy.yaml: |
+    node:
+      cluster: {{ .Values.image.node.cluster }}
+      id: {{ .Values.image.node.id }}
+    static_resources:
+      secrets:
+        - name: token
+          generic_secret:
+            secret:
+              filename: /config/secret/token
+        - name: hmac
+          generic_secret:
+            secret:
+              filename: /config/secret/hmac
+    dynamic_resources:
+      cds_config:
+        path_config_source:
+          path: /config/dynamic/cds.yaml
+      lds_config:
+        path_config_source:
+          path: /config/dynamic/lds.yaml
+    admin:
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 9901
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "envoy.fullname" . }}-cds
+data:
+  cds.yaml: |
+    resources:
+      - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+        name: oauth
+        type: LOGICAL_DNS
+        dns_lookup_family: V4_ONLY
+        load_assignment:
+          cluster_name: oauth
+          endpoints:
+            - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: {{ .Values.image.op.address }}
+                        port_value: 443
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+            sni: {{ .Values.image.op.address }}
+      - "@type": type.googleapis.com/envoy.config.cluster.v3.Cluster
+        name: s3
+        type: LOGICAL_DNS
+        dns_lookup_family: V4_ONLY
+        load_assignment:
+          cluster_name: s3
+          endpoints:
+            - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: {{ .Values.image.s3.bucketName }}.s3.{{ .Values.image.s3.region }}.amazonaws.com
+                        port_value: 443
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+            sni: {{ .Values.image.s3.bucketName }}.s3.{{ .Values.image.s3.region }}.amazonaws.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "envoy.fullname" . }}-lds
+data:
+  lds.yaml: |
+    resources:
+      - "@type": type.googleapis.com/envoy.config.listener.v3.Listener
+        name: listener_0
+        address:
+          socket_address:
+            address: 0.0.0.0
+            port_value: {{ .Values.image.portValue }}
+        filter_chains:
+          - filters:
+              - name: envoy.filters.network.http_connection_manager
+                typed_config:
+                  '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                  http_filters:
+                    - name: envoy.filters.http.oauth2
+                      typed_config:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+                        config:
+                          token_endpoint:
+                            cluster: oauth
+                            uri: {{ .Values.image.op.address }}/oauth2/token
+                            timeout: 10s
+                          authorization_endpoint: https://{{ .Values.image.op.address }}/login
+                          credentials:
+                            client_id: {{ .Values.image.op.clientId }}
+                            token_secret:
+                              name: token
+                            hmac_secret:
+                              name: hmac
+                          redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/callback"
+                          redirect_path_matcher:
+                            path:
+                              exact: /callback
+                          signout_path:
+                            path:
+                              exact: /signout
+                          forward_bearer_token: true
+                          auth_scopes:
+                            - openid
+                            - email
+                    - name: envoy.filters.http.lua
+                      typed_config:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+                        default_source_code:
+                          inline_string: |
+                            function envoy_on_request(request_handle)
+                              headers = request_handle:headers()
+                              headers:remove("authorization")
+                              path = headers:get(":path"):gsub("/$", "/index.html")
+                              headers:replace(":path", path)
+                            end
+                    - name: envoy.filters.http.aws_request_signing
+                      typed_config:
+                        '@type': type.googleapis.com/envoy.extensions.filters.http.aws_request_signing.v3.AwsRequestSigning
+                        service_name: s3
+                        region: {{ .Values.image.s3.region }}
+                        use_unsigned_payload: true
+                        host_rewrite: {{ .Values.image.s3.bucketName }}.s3.{{ .Values.image.s3.region }}.amazonaws.com
+                    - name: envoy.filters.http.router
+                      typed_config:
+                        "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                  codec_type: AUTO
+                  stat_prefix: ingress_http
+                  route_config:
+                    name: s3_route
+                    virtual_hosts:
+                      - name: static_web
+                        domains:
+                          - '*'
+                        routes:
+                          - match:
+                              prefix: /
+                            route:
+                              cluster: s3
