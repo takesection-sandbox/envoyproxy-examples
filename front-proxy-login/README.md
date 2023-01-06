@@ -17,3 +17,5 @@ kubectl port-forward svc/s3-envoy 8080:80
 ```
 
 ブラウザを使って "http://localhost:8080" にアクセスします。
+
+詳細については「[Envoy OAuth2 Filter を使ったログイン](https://developer.mamezou-tech.com/blogs/2022/10/16/envoy-oauth2/)」も参照してください。
